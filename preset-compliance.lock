@@ -10,7 +10,7 @@ sha256 = "2403e0aadcd8074b573ab7552229f21e55f1488bfe296d7bc7a7366508eeb2d2"
 
 [[inputs]]
 path = "Cargo.toml"
-sha256 = "3e319797a8ecbd5b3d4e34b86f98d339d2b7d13f3d646466d616f4755bbb2eae"
+sha256 = "ce18a8ba61a70064f493b8002023558f22bb814424542495331644d0f9420aea"
 
 [[packages]]
 ecosystem = "cargo"

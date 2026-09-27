@@ -2,6 +2,7 @@
 name = "preset-compliance"
 version = "0.0.1"
 edition = "2024"
+rust-version = "1.88"
 license = "MIT"
 description = "Records what a repo is built on, where it came from and under what terms, and checks it against one pinned policy. Licences first."
 repository = "https://github.com/preset-nz/compliance"
