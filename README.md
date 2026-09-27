@@ -3,12 +3,14 @@
 Records what a repo is built on, where each part came from and under what terms, and checks that
 record against one pinned policy. Licences are the first check.
 
-**Why.** AI builds most of what I make, and what worries me most is losing track of what a project
-uses and where it came from. It is too easy to say "do it" and end up with other people's work
-compiled in and nobody credited. I want attribution when people use my work, so I give it when I
-use theirs. Few ideas are new; citation shows where one came from before it became something else.
-preset-compliance does that for dependencies: every package, its licence and its origin, written
-down and checked.
+**Why.** Every dependency comes with terms, and breaking them is easy: a copyleft library linked
+into a closed app, a notice that never made it into the build. With AI writing much of the code it is
+easier still. Say "do it" and a project ends up with packages nobody chose, under licences nobody
+read. preset-compliance records every package in a repo, its licence and where it came from, and
+fails the build when one breaks the policy.
+
+It is also about credit. I want attribution when people use my work, so I give it when I use
+theirs. Few ideas are new; citation shows where one came from before it became something else.
 
 I am not a lawyer. This works for me. Nothing here is legal advice, and a passing check does not
 make a project compliant with anything.
@@ -40,9 +42,16 @@ Verdicts are never stored. Editing an exception takes effect on the next `check`
 A preset sets a list per scope. `permissive@1` allows permissive licences everywhere, and MPL-2.0
 for build and dev tooling only.
 
-**Ecosystems.** Cargo, through `cargo metadata`, because dependency kinds and workspace membership
-live in the manifests, not in `Cargo.lock`. `pnpm-lock.yaml` and `uv.lock` are detected and
-recorded as skipped.
+**Package managers.**
+
+| Package manager | Lockfile | Support |
+|---|---|---|
+| Cargo | `Cargo.lock` | Checked. Resolved through `cargo metadata`, because dependency kinds and workspace membership live in the manifests, not in the lockfile. |
+| pnpm | `pnpm-lock.yaml` | Detected and recorded as skipped. |
+| uv | `uv.lock` | Detected and recorded as skipped. |
+
+A skipped lockfile is listed in the lock and in every `check`, so nothing goes unscanned without
+saying so. A lockfile added after the last scan fails `check` until the next scan records it.
 
 ## Configuration
 
