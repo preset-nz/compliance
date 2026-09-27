@@ -91,7 +91,8 @@ a few hundred npm packages takes tens of seconds; after that, well under one.
 
 ## Build it
 
-Needs Rust 1.88 or later and [just](https://github.com/casey/just).
+Needs Rust 1.88 or later, [just](https://github.com/casey/just) and
+[lefthook](https://github.com/evilmartians/lefthook) (`just install` registers the git hooks).
 
 ```sh
 just install

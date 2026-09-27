@@ -6,12 +6,14 @@ default:
 
 [group('setup')]
 prep:
-    @echo "cargo: $(cargo --version 2>/dev/null || echo MISSING)"
-    @echo "rustc: $(rustc --version 2>/dev/null || echo MISSING)"
+    @echo "cargo:    $(cargo --version 2>/dev/null || echo MISSING)"
+    @echo "rustc:    $(rustc --version 2>/dev/null || echo MISSING)"
+    @echo "lefthook: $(lefthook version 2>/dev/null || echo 'MISSING (brew install lefthook)')"
 
 [group('setup')]
 install:
     cargo fetch --locked
+    lefthook install
 
 # Pass-through to the CLI, e.g. `just run licences check --root ../shard`.
 [group('dev')]

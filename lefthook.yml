@@ -1,0 +1,14 @@
+# Thin hooks; `just` recipes are the source of truth.
+# Convention: pre-commit is fast and staged-files-only, pre-push is the full gate.
+
+pre-commit:
+  parallel: true
+  commands:
+    rustfmt:
+      glob: "*.rs"
+      run: rustfmt --check --edition 2024 {staged_files}
+
+pre-push:
+  commands:
+    check:
+      run: just check
