@@ -65,7 +65,13 @@ pub struct Selector {
 
 impl Selector {
     pub fn matches(&self, package: &Package) -> bool {
-        if self.name != package.name {
+        // A trailing `*` matches a name prefix: `@img/sharp-libvips-*` covers
+        // every platform build of one native library.
+        let name_matches = match self.name.strip_suffix('*') {
+            Some(prefix) => package.name.starts_with(prefix),
+            None => self.name == package.name,
+        };
+        if !name_matches {
             return false;
         }
         if self.ecosystem.is_some_and(|e| e != package.ecosystem) {
@@ -186,6 +192,15 @@ mod tests {
         assert!(selector.matches(&package("selectors", "0.24.0")));
         assert!(!selector.matches(&package("selectors", "0.25.0")));
         assert!(!selector.matches(&package("cssparser", "0.24.0")));
+    }
+
+    #[test]
+    fn trailing_star_matches_a_prefix() {
+        let text = "[licences]\nextends = \"permissive@1\"\n[[licences.exceptions]]\nname = \"@img/sharp-libvips-*\"\nreason = \"LGPL, Node-only\"\n";
+        let config = Config::parse(text).unwrap();
+        let selector = &config.licences.exceptions[0].selector;
+        assert!(selector.matches(&package("@img/sharp-libvips-darwin-arm64", "1.3.3")));
+        assert!(!selector.matches(&package("@img/sharp-darwin-arm64", "0.35.4")));
     }
 
     #[test]

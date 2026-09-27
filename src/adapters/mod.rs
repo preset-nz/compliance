@@ -5,6 +5,7 @@
 //! Licence texts for notices (`sources`) join the trait in epic 06.
 
 pub mod cargo;
+pub mod pnpm;
 
 use crate::model::{Ecosystem, Package};
 use anyhow::Result;
@@ -36,6 +37,7 @@ pub fn lockfile_ecosystem(file_name: &str) -> Option<Ecosystem> {
 pub fn for_ecosystem(ecosystem: Ecosystem) -> Option<Box<dyn Adapter>> {
     match ecosystem {
         Ecosystem::Cargo => Some(Box::new(cargo::Cargo)),
-        Ecosystem::Pnpm | Ecosystem::Uv => None,
+        Ecosystem::Pnpm => Some(Box::new(pnpm::Pnpm)),
+        Ecosystem::Uv => None,
     }
 }
