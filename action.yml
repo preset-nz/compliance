@@ -1,0 +1,41 @@
+name: preset-compliance
+description: Install the preset-compliance binary from this repo's releases and, optionally, run it.
+author: preset.nz
+
+inputs:
+  args:
+    description: Arguments to run after installing, e.g. `licences check`. Empty installs only.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install preset-compliance
+      shell: bash
+      env:
+        REF: ${{ github.action_ref }}
+      run: |
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-X64)   target=x86_64-unknown-linux-musl ;;
+          Linux-ARM64) target=aarch64-unknown-linux-musl ;;
+          macOS-ARM64) target=aarch64-apple-darwin ;;
+          macOS-X64)   target=x86_64-apple-darwin ;;
+          *) echo "::error::preset-compliance has no build for ${RUNNER_OS}-${RUNNER_ARCH}"; exit 1 ;;
+        esac
+        # Pinned to the tag the action was used at; anything else takes the latest release.
+        if [[ "$REF" == v* ]]; then
+          base="https://github.com/preset-nz/compliance/releases/download/${REF}"
+        else
+          base="https://github.com/preset-nz/compliance/releases/latest/download"
+        fi
+        dir="${RUNNER_TEMP}/preset-compliance"
+        mkdir -p "$dir"
+        curl -fsSL "${base}/preset-compliance-${target}.tar.gz" | tar -xz -C "$dir"
+        echo "$dir" >> "$GITHUB_PATH"
+        "$dir/preset-compliance" --version
+
+    - name: Run preset-compliance
+      if: inputs.args != ''
+      shell: bash
+      run: preset-compliance ${{ inputs.args }}

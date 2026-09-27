@@ -17,6 +17,41 @@ make a project compliant with anything.
 
 ---
 
+## Use it
+
+```sh
+cargo binstall preset-compliance     # prebuilt binary; or `cargo install preset-compliance`
+cd your-repo
+preset-compliance init               # writes preset-compliance.toml, scans, checks
+preset-compliance add-ci             # justfile recipe + a CI step that installs the binary
+preset-compliance add-hooks          # lefthook pre-commit command
+```
+
+Commit what they write. After a dependency change, `preset-compliance licences scan` and commit
+the lock.
+
+- **`init`** writes `preset-compliance.toml` extending `permissive@1`, runs the first scan and
+  reports what fails.
+- **`add-ci`** adds a `licences` recipe to the justfile and calls it from `check`. Every workflow
+  step that runs `just check` gets an install step before it. With no such step, it writes
+  `.github/workflows/licences.yml` instead.
+- **`add-hooks`** adds a pre-commit command to `lefthook.yml`, or creates the file. It runs
+  `licences check` when a lockfile, a manifest or the tool's own files are staged. `check` reads
+  files only and takes well under a second; `scan` never runs in a hook.
+
+All three only add what is missing, so running one again changes nothing.
+
+**In GitHub Actions** the binary comes from this repo's releases, so CI never compiles Rust:
+
+```yaml
+- uses: preset-nz/compliance@v0.1.0                 # installs only
+- uses: preset-nz/compliance@v0.1.0
+  with:
+    args: licences check                            # installs and runs
+```
+
+Builds exist for Linux (x86_64, arm64, static musl) and macOS (arm64, x86_64).
+
 ## How it works
 
 Two commands, split by where they run.

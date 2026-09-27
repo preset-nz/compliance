@@ -8,6 +8,7 @@ mod detect;
 mod licence;
 mod lock;
 mod model;
+mod onboard;
 mod preset;
 mod scan;
 
@@ -31,6 +32,12 @@ enum Command {
     /// Dependency licences.
     #[command(subcommand)]
     Licences(Licences),
+    /// Set a repo up: write preset-compliance.toml, scan, check.
+    Init,
+    /// Wire the check into the justfile and GitHub Actions.
+    AddCi,
+    /// Run the check at pre-commit through lefthook.
+    AddHooks,
 }
 
 #[derive(Subcommand)]
@@ -55,8 +62,15 @@ fn main() -> ExitCode {
 }
 
 fn run(cli: Cli) -> Result<bool> {
+    match cli.command {
+        Command::Init => return init(&cli.root),
+        Command::AddCi => return print_changes(onboard::add_ci(&cli.root)?),
+        Command::AddHooks => return print_changes(onboard::add_hooks(&cli.root)?),
+        Command::Licences(_) => {}
+    }
     let config = config::Config::load(&cli.root)?;
     match cli.command {
+        Command::Init | Command::AddCi | Command::AddHooks => unreachable!("handled above"),
         Command::Licences(Licences::Scan) => {
             let report = scan::scan(&cli.root, &config)?;
             for skipped in &report.lock.skipped {
@@ -91,6 +105,33 @@ fn run(cli: Cli) -> Result<bool> {
             Ok(report.passed())
         }
     }
+}
+
+fn init(root: &std::path::Path) -> Result<bool> {
+    let path = onboard::write_config(root)?;
+    println!("wrote {}", path.display());
+    let config = config::Config::load(root)?;
+    let report = scan::scan(root, &config)?;
+    println!(
+        "wrote {} ({} packages)",
+        lock::FILE_NAME,
+        report.lock.packages.len()
+    );
+    let check = check::check(root, &config, &report.lock)?;
+    print_report(&check);
+    println!(
+        "\nNext: commit {} and {}. `preset-compliance add-ci` and `add-hooks` wire the check in.",
+        config::FILE_NAME,
+        lock::FILE_NAME
+    );
+    Ok(check.passed())
+}
+
+fn print_changes(changes: onboard::Changes) -> Result<bool> {
+    for line in changes.0 {
+        println!("{line}");
+    }
+    Ok(true)
 }
 
 fn print_report(report: &check::Report) {
