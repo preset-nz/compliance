@@ -1,0 +1,4 @@
+# This repo judges its own dependencies with the policy it ships.
+[licences]
+extends = "permissive@1"
+exclude = ["tests/fixtures"]

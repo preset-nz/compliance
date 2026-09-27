@@ -1,0 +1,28 @@
+[package]
+name = "preset-compliance"
+version = "0.0.1"
+edition = "2024"
+license = "MIT"
+description = "Records what a repo is built on, where it came from and under what terms, and checks it against one pinned policy. Licences first."
+repository = "https://github.com/preset-nz/compliance"
+readme = "README.md"
+keywords = ["license", "compliance", "spdx", "attribution", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+include = ["/src/**/*", "/presets/**/*", "/README.md", "/LICENSE"]
+
+[[bin]]
+name = "preset-compliance"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+semver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+spdx = "0.13"
+toml = "1"
+
+[dev-dependencies]
+tempfile = "3"
