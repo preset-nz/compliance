@@ -1,0 +1,44 @@
+name: Install
+
+# Installs the published release the ways a consumer would, on clean runners:
+# through this repo's action, and through cargo binstall from crates.io.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action:
+    name: action on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: preset-nz/compliance@v0.1.0
+        with:
+          args: licences check --root tests/fixtures/colours
+
+  binstall:
+    name: cargo binstall on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - run: cargo binstall -y --disable-strategies compile preset-compliance
+
+      - run: preset-compliance --version
+
+      - run: preset-compliance licences check --root tests/fixtures/shard
