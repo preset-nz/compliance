@@ -1,0 +1,23 @@
+[licences]
+extends = "permissive@1"
+
+# sharp's native builds bundle libvips (LGPL-3.0, dynamically linked). sharp
+# arrives through @huggingface/transformers, which uses it only in Node; the
+# browser bundle never contains it. Reviewed 2026-09-27.
+[[licences.exceptions]]
+name = "@img/sharp-libvips-*"
+reason = "LGPL-3.0 libvips, Node-only via transformers, never in the bundle"
+date = "2026-09-27"
+by = "Georg"
+
+[[licences.exceptions]]
+name = "@img/sharp-win32-*"
+reason = "bundles LGPL-3.0 libvips, Node-only via transformers, never in the bundle"
+date = "2026-09-27"
+by = "Georg"
+
+[[licences.exceptions]]
+name = "@img/sharp-wasm32"
+reason = "bundles LGPL-3.0 libvips, Node-only via transformers, never in the bundle"
+date = "2026-09-27"
+by = "Georg"

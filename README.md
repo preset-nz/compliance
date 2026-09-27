@@ -37,7 +37,7 @@ Verdicts are never stored. Editing an exception takes effect on the next `check`
 |---|---|---|
 | `shipped` | reachable through normal dependencies | `serde` |
 | `build` | build-dependencies, proc-macros and everything below them | `syn`, `cc` |
-| `dev` | reachable only through dev-dependencies | `tempfile` |
+| `dev` | reachable only through dev-dependencies (for npm, `devDependencies`) | `tempfile`, `vite` |
 
 A preset sets a list per scope. `permissive@1` allows permissive licences everywhere, and MPL-2.0
 for build and dev tooling only.
@@ -47,7 +47,7 @@ for build and dev tooling only.
 | Package manager | Lockfile | Support |
 |---|---|---|
 | Cargo | `Cargo.lock` | Checked. Resolved through `cargo metadata`, because dependency kinds and workspace membership live in the manifests, not in the lockfile. |
-| pnpm | `pnpm-lock.yaml` | Detected and recorded as skipped. |
+| pnpm | `pnpm-lock.yaml` (v9) | Checked. The graph and scope come from the lockfile; licences from the npm registry, cached. Optional builds for every platform are judged, not only the one scanning. |
 | uv | `uv.lock` | Detected and recorded as skipped. |
 
 A skipped lockfile is listed in the lock and in every `check`, so nothing goes unscanned without
@@ -79,7 +79,15 @@ by = "Georg"
 ```
 
 Every `clarify` and every exception needs a reason. `version` is a semver requirement and
-defaults to every version. SPDX ids are case-sensitive: `Apache-2.0`, not `apache-2.0`.
+defaults to every version. A trailing `*` in `name` matches a prefix, for packages published once
+per platform: `name = "@img/sharp-libvips-*"`. SPDX ids are case-sensitive: `Apache-2.0`, not `apache-2.0`.
+
+## Cache
+
+`scan` caches registry metadata per package version, which never changes once published. The cache
+lives in `~/Library/Caches/preset-compliance` on macOS and `~/.cache/preset-compliance` elsewhere
+(`$XDG_CACHE_HOME` respected); `PRESET_COMPLIANCE_CACHE` overrides both. A first scan of a repo with
+a few hundred npm packages takes tens of seconds; after that, well under one.
 
 ## Build it
 

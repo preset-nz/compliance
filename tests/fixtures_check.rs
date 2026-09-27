@@ -1,11 +1,17 @@
-//! `check` against a real repo's committed lock, with no cargo and no network
-//! involved: only the files in tests/fixtures/shard.
+//! `check` against real repos' committed locks, with no package manager and no
+//! network involved: only the files in tests/fixtures.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/shard")
+    fixture_named("shard")
+}
+
+fn fixture_named(name: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
 }
 
 fn check(root: &Path) -> (i32, String) {
@@ -34,11 +40,11 @@ fn copy_dir(from: &Path, to: &Path) {
 }
 
 #[test]
-fn shard_passes_with_its_four_exceptions() {
+fn shard_passes_cargo_and_pnpm_with_its_four_exceptions() {
     let (code, stdout) = check(&fixture());
     assert_eq!(code, 0, "{stdout}");
     assert!(
-        stdout.contains("522 packages judged, 4 excepted, 0 clarified, 0 violation(s) — pass"),
+        stdout.contains("1047 packages judged, 4 excepted, 0 clarified, 0 violation(s) — pass"),
         "{stdout}"
     );
 }
@@ -76,4 +82,65 @@ fn dropping_an_exception_fails() {
         stdout.contains("warning: exception for `not-selectors` matched nothing"),
         "{stdout}"
     );
+}
+
+#[test]
+fn a_colour_passes_with_sharp_excepted_and_lightningcss_in_dev() {
+    let (code, stdout) = check(&fixture_named("colours"));
+    assert_eq!(code, 0, "{stdout}");
+    assert!(
+        stdout.contains("666 packages judged, 14 excepted, 0 clarified, 0 violation(s) — pass"),
+        "{stdout}"
+    );
+
+    let lock =
+        std::fs::read_to_string(fixture_named("colours").join("preset-compliance.lock")).unwrap();
+    let lightningcss = lock
+        .split("[[packages]]")
+        .find(|p| p.contains("name = \"lightningcss\""))
+        .unwrap();
+    assert!(lightningcss.contains("scope = \"dev\""), "{lightningcss}");
+}
+
+#[test]
+fn a_colour_without_the_libvips_exception_fails_on_every_platform() {
+    let dir = tempfile::tempdir().unwrap();
+    copy_dir(&fixture_named("colours"), dir.path());
+    let config = dir.path().join("preset-compliance.toml");
+    let text = std::fs::read_to_string(&config).unwrap();
+    std::fs::write(
+        &config,
+        text.replace("@img/sharp-libvips-*", "@img/not-libvips"),
+    )
+    .unwrap();
+
+    let (code, stdout) = check(dir.path());
+    assert_eq!(code, 1, "{stdout}");
+    for platform in [
+        "darwin-arm64",
+        "linux-x64",
+        "linuxmusl-arm64",
+        "linux-s390x",
+    ] {
+        assert!(
+            stdout.contains(&format!(
+                "@img/sharp-libvips-{platform}@1.3.3 (pnpm) — LGPL-3.0-or-later"
+            )),
+            "{platform}: {stdout}"
+        );
+    }
+}
+
+#[test]
+fn editing_pnpm_lock_makes_the_lock_stale() {
+    let dir = tempfile::tempdir().unwrap();
+    copy_dir(&fixture_named("colours"), dir.path());
+    let lockfile = dir.path().join("pnpm-lock.yaml");
+    let mut text = std::fs::read_to_string(&lockfile).unwrap();
+    text.push('\n');
+    std::fs::write(&lockfile, text).unwrap();
+
+    let (code, stdout) = check(dir.path());
+    assert_eq!(code, 1, "{stdout}");
+    assert!(stdout.contains("stale: pnpm-lock.yaml"), "{stdout}");
 }
