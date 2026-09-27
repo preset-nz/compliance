@@ -1,0 +1,30 @@
+[licences]
+extends = "permissive@1"
+
+# MPL-2.0 is file-level copyleft: changes to their files must be published,
+# but it does not reach our code. All arrive through Tauri, are used
+# unmodified, and cannot be dropped without dropping Tauri. Reviewed
+# 2026-09-12. (cssparser-macros needs no exception: a proc-macro, build scope.)
+[[licences.exceptions]]
+name = "cssparser"
+reason = "MPL-2.0 via Tauri, unmodified"
+date = "2026-09-12"
+by = "Georg"
+
+[[licences.exceptions]]
+name = "dtoa-short"
+reason = "MPL-2.0 via Tauri, unmodified"
+date = "2026-09-12"
+by = "Georg"
+
+[[licences.exceptions]]
+name = "selectors"
+reason = "MPL-2.0 via Tauri, unmodified"
+date = "2026-09-12"
+by = "Georg"
+
+[[licences.exceptions]]
+name = "option-ext"
+reason = "MPL-2.0 via Tauri (dirs), unmodified"
+date = "2026-09-12"
+by = "Georg"

@@ -1,0 +1,32 @@
+# Workspace: a UI-free DSP crate plus the thin binaries that drive it.
+# shard-dsp must pass `cargo test` with no audio device and no I/O at all.
+[workspace]
+resolver = "2"
+members = ["crates/shard-dsp", "crates/shard-play", "crates/shard-probe", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0-alpha"
+edition = "2021"
+publish = false
+
+# Licence gate (family rule: permissive only, no copyleft in the shipped tree).
+# Checked 2026-09-12 with `cargo metadata`. symphonia is deliberately absent —
+# it is MPL-2.0, which is file-level copyleft, and the only MPL exceptions in
+# the family are build-time tools that never ship. hound covers WAV, which is
+# all batch one needs. Revisit only if MP3/FLAC input is ever wanted.
+[workspace.dependencies]
+cpal = "0.15"
+hound = "3"
+midir = "0.11"
+shard-dsp = { path = "crates/shard-dsp" }
+
+# Decoding a WAV is a tight loop over every sample. Unoptimised, a three-minute
+# stereo file took 2.05 s to decode, against 0.13 s at opt-level 1 (measured
+# 2026-09-15). hound's sample reader is generic, so it compiles into `shard`
+# itself, and optimising the hound package alone changed nothing.
+[profile.dev.package.shard]
+opt-level = 1
+
+[profile.release]
+lto = true
+codegen-units = 1
