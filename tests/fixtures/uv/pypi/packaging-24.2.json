@@ -1,0 +1,12 @@
+{
+  "info": {
+    "license_expression": null,
+    "license": null,
+    "classifiers": [
+      "Programming Language :: Python :: 3"
+    ],
+    "name": "packaging",
+    "version": "24.2"
+  },
+  "urls": []
+}

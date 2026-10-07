@@ -1,0 +1,1 @@
+Synthetic: a small `uv.lock` and PyPI JSON documents trimmed to the fields the adapter reads, covering a PEP 639 expression, classifiers only, free text, a dev group, an extra, an in-repo path dependency and a git source. No real project.

@@ -1,0 +1,12 @@
+{
+  "info": {
+    "license_expression": "BSD-3-Clause AND 0BSD AND MIT",
+    "license": null,
+    "classifiers": [
+      "License :: OSI Approved :: BSD License"
+    ],
+    "name": "numpy",
+    "version": "2.5.0"
+  },
+  "urls": []
+}

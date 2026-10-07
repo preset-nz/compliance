@@ -103,7 +103,9 @@ package is relicensed and the preset pin no longer matches.
 |---|---|---|
 | Cargo | `Cargo.lock` | Checked. Resolved through `cargo metadata`, because dependency kinds and workspace membership live in the manifests, not in the lockfile. |
 | pnpm | `pnpm-lock.yaml` (v9) | Checked. The graph and scope come from the lockfile; licences from the npm registry, cached. Optional builds for every platform are judged, not only the one scanning. |
-| uv | `uv.lock` | Detected and recorded as skipped. |
+| uv | `uv.lock` | Checked. The graph and scope come from the lockfile; licences from PyPI's JSON, cached. What the project's `dependencies` and extras reach is shipped; every dependency group (`[dependency-groups]`, PEP 735) is dev. Markers are ignored, so Windows-only packages are judged too. |
+
+For uv, `scan` needs the network and fails without it. It reads, in order: `license_expression` (PEP 639), then the `License ::` classifiers mapped to SPDX (several are joined with `AND`: every one must be allowed), then the free-text `license` field. Free text that is not an SPDX id is unparseable, so it needs a `clarify` entry. A package from a git, URL or private-index source has no declared licence and needs one too. Path dependencies inside the repo are the project's own and are not judged.
 
 A skipped lockfile is listed in the lock and in every `check`, so nothing goes unscanned without
 saying so. A lockfile added after the last scan fails `check` until the next scan records it.

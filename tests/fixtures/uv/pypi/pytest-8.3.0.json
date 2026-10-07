@@ -1,0 +1,12 @@
+{
+  "info": {
+    "license_expression": "MIT",
+    "license": null,
+    "classifiers": [
+      "License :: OSI Approved :: MIT License"
+    ],
+    "name": "pytest",
+    "version": "8.3.0"
+  },
+  "urls": []
+}

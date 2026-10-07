@@ -1,0 +1,10 @@
+{
+  "info": {
+    "license_expression": null,
+    "license": "see LICENSE.txt\nThe package ships its licence as a file, and the field says nothing more useful.",
+    "classifiers": [],
+    "name": "iniconfig",
+    "version": "2.3.0"
+  },
+  "urls": []
+}

@@ -17,16 +17,67 @@ const MAPPINGS: &[(&str, &str)] = &[
     ("ISC License (ISCL)", "ISC"),
     ("The Unlicense (Unlicense)", "Unlicense"),
     ("Python Software Foundation License", "PSF-2.0"),
+    // Trove classifiers (`License :: OSI Approved :: <name>`), last segment.
+    ("BSD 2-Clause License", "BSD-2-Clause"),
+    ("2-Clause BSD License", "BSD-2-Clause"),
+    ("BSD 3-Clause License", "BSD-3-Clause"),
+    ("zlib/libpng License", "Zlib"),
+    ("Historical Permission Notice and Disclaimer (HPND)", "HPND"),
+    ("Boost Software License 1.0 (BSL-1.0)", "BSL-1.0"),
+    ("Mozilla Public License 2.0 (MPL 2.0)", "MPL-2.0"),
+    ("Eclipse Public License 2.0 (EPL-2.0)", "EPL-2.0"),
+    (
+        "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+        "CC0-1.0",
+    ),
+    ("GNU General Public License v2 (GPLv2)", "GPL-2.0-only"),
+    (
+        "GNU General Public License v2 or later (GPLv2+)",
+        "GPL-2.0-or-later",
+    ),
+    ("GNU General Public License v3 (GPLv3)", "GPL-3.0-only"),
+    (
+        "GNU General Public License v3 or later (GPLv3+)",
+        "GPL-3.0-or-later",
+    ),
+    (
+        "GNU Lesser General Public License v2 (LGPLv2)",
+        "LGPL-2.0-only",
+    ),
+    (
+        "GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "LGPL-2.0-or-later",
+    ),
+    (
+        "GNU Lesser General Public License v3 (LGPLv3)",
+        "LGPL-3.0-only",
+    ),
+    (
+        "GNU Lesser General Public License v3 or later (LGPLv3+)",
+        "LGPL-3.0-or-later",
+    ),
+    ("GNU Affero General Public License v3", "AGPL-3.0-only"),
+    (
+        "GNU Affero General Public License v3 or later (AGPLv3+)",
+        "AGPL-3.0-or-later",
+    ),
 ];
+
+/// The SPDX id for a trove licence name (the last segment of a
+/// `License :: OSI Approved :: …` classifier), or `None` when unmapped.
+pub fn trove_to_spdx(name: &str) -> Option<&'static str> {
+    let name = name.trim();
+    MAPPINGS
+        .iter()
+        .find(|(from, _)| from.eq_ignore_ascii_case(name))
+        .map(|(_, to)| *to)
+}
 
 /// Parse a declared licence into an SPDX expression, accepting the lax forms
 /// packages use in the wild (`MIT/Apache-2.0`, imprecise names).
 pub fn parse(declared: &str) -> Option<Expression> {
     let trimmed = declared.trim();
-    let mapped = MAPPINGS
-        .iter()
-        .find(|(from, _)| from.eq_ignore_ascii_case(trimmed))
-        .map_or(trimmed, |(_, to)| to);
+    let mapped = trove_to_spdx(trimmed).unwrap_or(trimmed);
     Expression::parse_mode(mapped, ParseMode::LAX).ok()
 }
 
@@ -140,6 +191,25 @@ mod tests {
     fn classifier_names_map_to_spdx() {
         assert!(permits(&permissive(), "MIT License"));
         assert!(permits(&permissive(), "Apache Software License"));
+    }
+
+    #[test]
+    fn every_mapping_is_valid_spdx() {
+        for (from, to) in MAPPINGS {
+            assert!(
+                Expression::parse_mode(to, ParseMode::LAX).is_ok(),
+                "{from} -> {to}"
+            );
+        }
+    }
+
+    #[test]
+    fn trove_names_map_to_spdx_ids() {
+        assert_eq!(
+            trove_to_spdx("GNU General Public License v2 or later (GPLv2+)"),
+            Some("GPL-2.0-or-later")
+        );
+        assert_eq!(trove_to_spdx("Other/Proprietary License"), None);
     }
 
     #[test]

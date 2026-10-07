@@ -1,0 +1,13 @@
+{
+  "info": {
+    "license_expression": null,
+    "license": null,
+    "classifiers": [
+      "License :: OSI Approved :: BSD License",
+      "License :: OSI Approved :: MIT License"
+    ],
+    "name": "tinyfont",
+    "version": "1.2.0"
+  },
+  "urls": []
+}

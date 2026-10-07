@@ -1,0 +1,12 @@
+{
+  "info": {
+    "license_expression": null,
+    "license": "GPLv2-or-later with a special exception which allows to use PyInstaller to build and distribute non-free programs (including commercial ones)",
+    "classifiers": [
+      "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)"
+    ],
+    "name": "pyinstaller",
+    "version": "6.21.0"
+  },
+  "urls": []
+}

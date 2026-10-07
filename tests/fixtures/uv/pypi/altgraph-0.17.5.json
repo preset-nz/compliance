@@ -1,0 +1,13 @@
+{
+  "info": {
+    "license_expression": null,
+    "license": "MIT",
+    "classifiers": [
+      "License :: OSI Approved :: MIT License",
+      "Programming Language :: Python :: 3"
+    ],
+    "name": "altgraph",
+    "version": "0.17.5"
+  },
+  "urls": []
+}

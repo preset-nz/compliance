@@ -6,11 +6,13 @@
 
 pub mod cargo;
 pub mod pnpm;
+pub mod uv;
 
 use crate::model::{Ecosystem, Package};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug)]
 pub struct Resolved {
     pub packages: Vec<Package>,
     /// Every file the facts were derived from, relative to the repo root:
@@ -38,6 +40,24 @@ pub fn for_ecosystem(ecosystem: Ecosystem) -> Option<Box<dyn Adapter>> {
     match ecosystem {
         Ecosystem::Cargo => Some(Box::new(cargo::Cargo)),
         Ecosystem::Pnpm => Some(Box::new(pnpm::Pnpm)),
-        Ecosystem::Uv => None,
+        Ecosystem::Uv => Some(Box::new(uv::Uv::pypi())),
+    }
+}
+
+/// `$PRESET_COMPLIANCE_CACHE`, else the platform's user cache directory.
+pub(crate) fn cache_dir() -> PathBuf {
+    if let Some(dir) = std::env::var_os("PRESET_COMPLIANCE_CACHE") {
+        return PathBuf::from(dir);
+    }
+    if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
+        return PathBuf::from(dir).join("preset-compliance");
+    }
+    let home = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(std::env::temp_dir);
+    if cfg!(target_os = "macos") {
+        home.join("Library/Caches/preset-compliance")
+    } else {
+        home.join(".cache/preset-compliance")
     }
 }

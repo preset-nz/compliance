@@ -6,12 +6,12 @@
 //! Every package in the lockfile is judged, including optional platform
 //! packages for platforms other than the one scanning.
 
-use super::{Adapter, Resolved};
+use super::{Adapter, Resolved, cache_dir};
 use crate::model::{Ecosystem, Package, Scope, Source};
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use std::collections::{BTreeMap, VecDeque};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Mutex;
 
 pub struct Pnpm;
@@ -330,24 +330,6 @@ fn declared_licence(document: &serde_json::Value) -> Option<String> {
         0 => None,
         1 => list.into_iter().next(),
         _ => Some(format!("({})", list.join(" OR "))),
-    }
-}
-
-/// `$PRESET_COMPLIANCE_CACHE`, else the platform's user cache directory.
-fn cache_dir() -> PathBuf {
-    if let Some(dir) = std::env::var_os("PRESET_COMPLIANCE_CACHE") {
-        return PathBuf::from(dir);
-    }
-    if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
-        return PathBuf::from(dir).join("preset-compliance");
-    }
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(std::env::temp_dir);
-    if cfg!(target_os = "macos") {
-        home.join("Library/Caches/preset-compliance")
-    } else {
-        home.join(".cache/preset-compliance")
     }
 }
 
