@@ -44,3 +44,12 @@ fmt:
 [group('build')]
 build:
     cargo build --release --locked
+
+# Bump the version, write the changelog, commit and tag (knope). Never pushes.
+[group('build')]
+release:
+    knope release
+
+[group('build')]
+release-preview:
+    knope release --dry-run
