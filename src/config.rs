@@ -18,7 +18,7 @@ pub struct Config {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Licences {
-    /// The pinned preset, e.g. `permissive@1`.
+    /// The pinned preset, e.g. `permissive@2`.
     pub extends: String,
     /// Paths (relative to the repo root) never scanned for lockfiles.
     #[serde(default)]
@@ -54,7 +54,7 @@ impl ScopedAllow {
 }
 
 /// Which packages an entry applies to.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Selector {
     pub name: String,
     /// Restrict to one ecosystem when a name exists in several.
@@ -131,7 +131,7 @@ impl Config {
         let path = root.join(FILE_NAME);
         let text = std::fs::read_to_string(&path).with_context(|| {
             format!(
-                "no {FILE_NAME} in {}. A minimal one:\n\n[licences]\nextends = \"permissive@1\"\n",
+                "no {FILE_NAME} in {}. A minimal one:\n\n[licences]\nextends = \"permissive@2\"\n",
                 root.display()
             )
         })?;

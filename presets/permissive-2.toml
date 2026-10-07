@@ -1,0 +1,98 @@
+# permissive@2 — the preset.nz family policy.
+#
+# Changed from permissive@1 (2026-10-08): the same licence lists, plus
+# preset-level package exceptions. Every Tauri app pulls in four MPL-2.0 crates
+# on its shipped path, and each repo was copying the same four exception blocks.
+# They are allowed here once, pinned to MPL-2.0, so a relicensed release fails
+# again. A repo that never depends on them is not told they went unused.
+#
+# I am not a lawyer. This is the policy I apply to my own repos, and it works
+# for me. It is not legal advice, and using it does not make anything
+# compliant with anything.
+#
+# Shipped code: permissive licences only, no copyleft, so a project can stay
+# closed, be published or be sold. Build and dev tooling may also be MPL-2.0:
+# file-level copyleft, used unmodified, never linked into what ships.
+#
+# A preset version never changes once released. A changed policy is a new
+# version (permissive@3), adopted explicitly per repo.
+
+name = "permissive"
+version = 2
+
+[scopes.shipped]
+allow = [
+  "MIT",
+  "MIT-0",
+  "MIT-CMU",
+  "ISC",
+  "Apache-2.0",
+  # LLVM's exception removes the attribution requirement for compiled output.
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "0BSD",
+  "Zlib",
+  "Unlicense",
+  "CC0-1.0",
+  "BlueOak-1.0.0",
+  # Unicode License v3: BSD-style with a trademark clause, OSI-approved. Arrives
+  # through the ICU4X crates. Reviewed 2026-09-12 (Shard).
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "Python-2.0",
+  "PSF-2.0",
+  "HPND",
+  # Fonts only, in practice.
+  "OFL-1.1",
+  # Data and docs assets only, in practice.
+  "CC-BY-4.0",
+]
+
+[scopes.build]
+# Everything allowed in shipped, plus:
+allow = [
+  "MPL-2.0",
+]
+
+[scopes.dev]
+# Everything allowed in shipped, plus:
+allow = [
+  "MPL-2.0",
+]
+
+# Reviewed 2026-09-12 by Georg. MPL-2.0 is file-level copyleft: it binds only
+# changes to these crates' own files, and they are used unmodified. Each entry
+# applies only while the package's licence is still exactly MPL-2.0.
+
+[[exceptions]]
+name = "cssparser"
+ecosystem = "cargo"
+licence = "MPL-2.0"
+reason = "MPL-2.0 via Tauri's webview stack, unmodified"
+date = "2026-09-12"
+by = "Georg"
+
+[[exceptions]]
+name = "dtoa-short"
+ecosystem = "cargo"
+licence = "MPL-2.0"
+reason = "MPL-2.0 via Tauri's webview stack, unmodified"
+date = "2026-09-12"
+by = "Georg"
+
+[[exceptions]]
+name = "selectors"
+ecosystem = "cargo"
+licence = "MPL-2.0"
+reason = "MPL-2.0 via Tauri's webview stack, unmodified"
+date = "2026-09-12"
+by = "Georg"
+
+[[exceptions]]
+name = "option-ext"
+ecosystem = "cargo"
+licence = "MPL-2.0"
+reason = "MPL-2.0 via Tauri, through dirs, unmodified"
+date = "2026-09-12"
+by = "Georg"

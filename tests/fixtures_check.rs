@@ -50,6 +50,38 @@ fn shard_passes_cargo_and_pnpm_with_its_four_exceptions() {
 }
 
 #[test]
+fn shard_on_permissive_2_passes_with_no_repo_exceptions() {
+    let dir = tempfile::tempdir().unwrap();
+    copy_dir(&fixture(), dir.path());
+    std::fs::write(
+        dir.path().join("preset-compliance.toml"),
+        "[licences]\nextends = \"permissive@2\"\n",
+    )
+    .unwrap();
+    let (code, stdout) = check(dir.path());
+    assert_eq!(code, 0, "{stdout}");
+    assert!(
+        stdout.contains(
+            "1047 packages judged, 4 excepted (4 by preset), 0 clarified, 0 violation(s) — pass"
+        ),
+        "{stdout}"
+    );
+}
+
+#[test]
+fn shard_on_permissive_2_flags_its_repo_exceptions_as_redundant() {
+    let dir = tempfile::tempdir().unwrap();
+    copy_dir(&fixture(), dir.path());
+    let path = dir.path().join("preset-compliance.toml");
+    let text = std::fs::read_to_string(&path).unwrap().replace("@1", "@2");
+    std::fs::write(&path, text).unwrap();
+    let (code, stdout) = check(dir.path());
+    assert_eq!(code, 0, "{stdout}");
+    assert_eq!(stdout.matches("is redundant").count(), 4, "{stdout}");
+    assert!(stdout.contains("4 excepted (4 by preset)"), "{stdout}");
+}
+
+#[test]
 fn editing_a_manifest_makes_the_lock_stale() {
     let dir = tempfile::tempdir().unwrap();
     copy_dir(&fixture(), dir.path());

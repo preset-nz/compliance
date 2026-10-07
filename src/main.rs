@@ -167,12 +167,21 @@ fn print_report(report: &check::Report) {
     for name in &report.unused_exceptions {
         println!("warning: exception for `{name}` matched nothing");
     }
+    for name in &report.redundant_exceptions {
+        println!(
+            "warning: exception for `{name}` is redundant: the preset already excepts it; delete it"
+        );
+    }
     for name in &report.unused_clarify {
         println!("warning: clarify for `{name}` matched nothing");
     }
     let verdict = if report.passed() { "pass" } else { "FAIL" };
+    let by_preset = match report.excepted_by_preset {
+        0 => String::new(),
+        n => format!(" ({n} by preset)"),
+    };
     println!(
-        "licences: {} packages judged, {} excepted, {} clarified, {} violation(s) — {verdict}",
+        "licences: {} packages judged, {} excepted{by_preset}, {} clarified, {} violation(s) — {verdict}",
         report.judged,
         report.excepted,
         report.clarified,

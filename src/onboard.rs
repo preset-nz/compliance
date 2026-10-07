@@ -33,9 +33,12 @@ pub fn write_config(root: &Path) -> Result<PathBuf> {
     }
     std::fs::write(
         &path,
-        "# preset-compliance: https://github.com/preset-nz/compliance\n\
-         [licences]\n\
-         extends = \"permissive@1\"\n",
+        format!(
+            "# preset-compliance: https://github.com/preset-nz/compliance\n\
+             [licences]\n\
+             extends = \"{}\"\n",
+            crate::preset::DEFAULT
+        ),
     )?;
     Ok(path)
 }
@@ -289,6 +292,15 @@ check:
 build:
     cargo build --release
 ";
+
+    #[test]
+    fn init_writes_the_default_preset_and_it_loads() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_config(dir.path()).unwrap();
+        let text = std::fs::read_to_string(path).unwrap();
+        assert!(text.contains("extends = \"permissive@2\""), "{text}");
+        assert!(crate::preset::Preset::load(crate::preset::DEFAULT).is_ok());
+    }
 
     #[test]
     fn justfile_gets_recipe_and_check_calls_it() {

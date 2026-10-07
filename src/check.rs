@@ -19,10 +19,15 @@ pub struct Report {
     pub unrecorded: Vec<PathBuf>,
     pub skipped: Vec<PathBuf>,
     pub violations: Vec<Violation>,
+    /// Packages let through by an exception, preset ones included.
     pub excepted: usize,
+    /// Of `excepted`, those let through by the preset's own exceptions.
+    pub excepted_by_preset: usize,
     pub clarified: usize,
     pub judged: usize,
     pub unused_exceptions: Vec<String>,
+    /// Repo exceptions the preset already covers: safe to delete.
+    pub redundant_exceptions: Vec<String>,
     pub unused_clarify: Vec<String>,
 }
 
@@ -89,6 +94,7 @@ pub fn check(root: &Path, config: &Config, lock: &Lock) -> Result<Report> {
         .collect();
 
     let mut exception_used = vec![false; config.licences.exceptions.len()];
+    let mut exception_redundant = vec![false; config.licences.exceptions.len()];
     let mut clarify_used = vec![false; config.licences.clarify.len()];
 
     for package in &lock.packages {
@@ -116,6 +122,23 @@ pub fn check(root: &Path, config: &Config, lock: &Lock) -> Result<Report> {
         };
         let Some(why) = why else { continue };
 
+        // The preset's exceptions come first, and only count while the licence
+        // is still the one reviewed. A repo exception covering the same
+        // package is then redundant, not used.
+        if preset
+            .exceptions
+            .iter()
+            .any(|e| e.covers(package, licence.as_deref()))
+        {
+            report.excepted += 1;
+            report.excepted_by_preset += 1;
+            for (i, e) in config.licences.exceptions.iter().enumerate() {
+                if e.selector.matches(package) {
+                    exception_redundant[i] = true;
+                }
+            }
+            continue;
+        }
         if let Some(i) = config
             .licences
             .exceptions
@@ -133,8 +156,23 @@ pub fn check(root: &Path, config: &Config, lock: &Lock) -> Result<Report> {
         });
     }
 
+    // Redundant means the preset did all the work; a repo exception that also
+    // applied to some other package is simply used.
+    let accounted: Vec<bool> = exception_used
+        .iter()
+        .zip(&exception_redundant)
+        .map(|(used, redundant)| *used || *redundant)
+        .collect();
+    report.redundant_exceptions = config
+        .licences
+        .exceptions
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| exception_redundant[*i] && !exception_used[*i])
+        .map(|(_, e)| e.selector.name.clone())
+        .collect();
     report.unused_exceptions = unused(
-        &exception_used,
+        &accounted,
         config.licences.exceptions.iter().map(|e| &e.selector.name),
     );
     report.unused_clarify = unused(
@@ -240,5 +278,107 @@ mod tests {
         let report = check(dir.path(), &config(""), &lock).unwrap();
         assert_eq!(report.unrecorded, vec![PathBuf::from("sidecar/uv.lock")]);
         assert!(!report.passed());
+    }
+
+    fn config_with(preset: &str, extra: &str) -> Config {
+        Config::parse(&format!("[licences]\nextends = \"{preset}\"\n{extra}")).unwrap()
+    }
+
+    fn mpl(name: &str) -> Package {
+        package(name, Some("MPL-2.0"), Scope::Shipped)
+    }
+
+    #[test]
+    fn preset_exception_applies_and_is_counted_apart() {
+        let (dir, lock) = repo(vec![mpl("selectors"), mpl("other-mpl")]);
+        let report = check(dir.path(), &config_with("permissive@2", ""), &lock).unwrap();
+        assert_eq!(report.excepted, 1);
+        assert_eq!(report.excepted_by_preset, 1);
+        assert_eq!(report.violations.len(), 1);
+        assert_eq!(report.violations[0].package.name, "other-mpl");
+    }
+
+    #[test]
+    fn preset_exceptions_are_not_unused_in_a_repo_without_those_crates() {
+        let (dir, lock) = repo(vec![package("serde", Some("MIT"), Scope::Shipped)]);
+        let report = check(dir.path(), &config_with("permissive@2", ""), &lock).unwrap();
+        assert!(report.passed());
+        assert_eq!(report.excepted_by_preset, 0);
+        assert!(report.unused_exceptions.is_empty());
+        assert!(report.redundant_exceptions.is_empty());
+    }
+
+    #[test]
+    fn relicensed_package_fails_despite_the_preset_exception() {
+        let (dir, lock) = repo(vec![package(
+            "selectors",
+            Some("GPL-3.0-only"),
+            Scope::Shipped,
+        )]);
+        let report = check(dir.path(), &config_with("permissive@2", ""), &lock).unwrap();
+        assert_eq!(report.violations.len(), 1);
+        assert_eq!(report.excepted_by_preset, 0);
+    }
+
+    #[test]
+    fn dual_licence_is_not_the_pinned_licence() {
+        let (dir, lock) = repo(vec![package(
+            "selectors",
+            Some("MPL-2.0 AND GPL-3.0-only"),
+            Scope::Shipped,
+        )]);
+        let report = check(dir.path(), &config_with("permissive@2", ""), &lock).unwrap();
+        assert_eq!(report.violations.len(), 1);
+    }
+
+    #[test]
+    fn clarified_licence_is_what_the_pin_is_matched_against() {
+        let (dir, lock) = repo(vec![package("selectors", None, Scope::Shipped)]);
+        let clarified = config_with(
+            "permissive@2",
+            "[[licences.clarify]]\nname = \"selectors\"\nexpression = \"MPL-2.0\"\nreason = \"read by hand\"\n",
+        );
+        let report = check(dir.path(), &clarified, &lock).unwrap();
+        assert!(report.passed());
+        assert_eq!(report.excepted_by_preset, 1);
+    }
+
+    #[test]
+    fn repo_exception_for_a_preset_excepted_crate_is_redundant() {
+        let (dir, lock) = repo(vec![mpl("selectors")]);
+        let config = config_with(
+            "permissive@2",
+            "[[licences.exceptions]]\nname = \"selectors\"\nreason = \"via Tauri\"\n",
+        );
+        let report = check(dir.path(), &config, &lock).unwrap();
+        assert!(report.passed());
+        assert_eq!(report.excepted_by_preset, 1);
+        assert_eq!(report.redundant_exceptions, vec!["selectors".to_string()]);
+        assert!(report.unused_exceptions.is_empty());
+    }
+
+    #[test]
+    fn repo_exception_still_covers_a_relicensed_preset_crate() {
+        let (dir, lock) = repo(vec![package(
+            "selectors",
+            Some("GPL-3.0-only"),
+            Scope::Shipped,
+        )]);
+        let config = config_with(
+            "permissive@2",
+            "[[licences.exceptions]]\nname = \"selectors\"\nreason = \"reviewed GPL\"\n",
+        );
+        let report = check(dir.path(), &config, &lock).unwrap();
+        assert!(report.passed());
+        assert_eq!(report.excepted_by_preset, 0);
+        assert!(report.redundant_exceptions.is_empty());
+    }
+
+    #[test]
+    fn permissive_1_ignores_preset_exceptions_entirely() {
+        let (dir, lock) = repo(vec![mpl("selectors")]);
+        let report = check(dir.path(), &config(""), &lock).unwrap();
+        assert_eq!(report.violations.len(), 1);
+        assert_eq!(report.excepted_by_preset, 0);
     }
 }

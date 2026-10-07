@@ -30,7 +30,7 @@ preset-compliance add-hooks          # lefthook pre-commit command
 Commit what they write. After a dependency change, `preset-compliance licences scan` and commit
 the lock.
 
-- **`init`** writes `preset-compliance.toml` extending `permissive@1`, runs the first scan and
+- **`init`** writes `preset-compliance.toml` extending `permissive@2`, runs the first scan and
   reports what fails.
 - **`add-ci`** adds a `licences` recipe to the justfile and calls it from `check`. Every workflow
   step that runs `just check` gets an install step before it. With no such step, it writes
@@ -75,7 +75,27 @@ Verdicts are never stored. Editing an exception takes effect on the next `check`
 | `dev` | reachable only through dev-dependencies (for npm, `devDependencies`) | `tempfile`, `vite` |
 
 A preset sets a list per scope. `permissive@1` allows permissive licences everywhere, and MPL-2.0
-for build and dev tooling only.
+for build and dev tooling only. A released preset never changes; a changed policy is a new version
+that each repo adopts by editing `extends`.
+
+`permissive@2` has the same lists plus **preset exceptions**: `cssparser`, `dtoa-short`,
+`selectors` and `option-ext`, the four MPL-2.0 crates every Tauri app pulls in. MPL-2.0 is
+file-level copyleft and they are used unmodified (reviewed 2026-09-12). Each is pinned to
+`licence = "MPL-2.0"`, so a release under any other licence fails again. In the preset file:
+
+```toml
+[[exceptions]]
+name = "selectors"            # same selector as a repo exception: name, ecosystem, version
+licence = "MPL-2.0"           # the judged licence (after any clarify) must still be this
+reason = "MPL-2.0 via Tauri's webview stack, unmodified"
+date = "2026-09-12"
+by = "Georg"
+```
+
+A preset exception is never reported as unused, since most repos lack those crates. `check`
+counts them apart: `4 excepted (4 by preset)`. A repo exception for a package the preset already
+excepts is reported as redundant, and can be deleted. A repo exception still applies if the
+package is relicensed and the preset pin no longer matches.
 
 **Package managers.**
 
@@ -94,7 +114,7 @@ saying so. A lockfile added after the last scan fails `check` until the next sca
 
 ```toml
 [licences]
-extends = "permissive@1"        # a preset, pinned by version
+extends = "permissive@2"        # a preset, pinned by version
 exclude = ["vendor"]            # paths never searched for lockfiles
 
 [licences.allow]                # on top of the preset, per scope
@@ -113,7 +133,8 @@ date = "2026-09-12"
 by = "Georg"
 ```
 
-Every `clarify` and every exception needs a reason. `version` is a semver requirement and
+Every `clarify` and every exception needs a reason. Repo exceptions are not pinned to a licence
+(only preset exceptions are), so one keeps applying if the package changes licence. `version` is a semver requirement and
 defaults to every version. A trailing `*` in `name` matches a prefix, for packages published once
 per platform: `name = "@img/sharp-libvips-*"`. SPDX ids are case-sensitive: `Apache-2.0`, not `apache-2.0`.
 
