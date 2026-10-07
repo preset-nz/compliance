@@ -6,11 +6,11 @@ version = 1
 [[inputs]]
 path = "Cargo.lock"
 ecosystem = "cargo"
-sha256 = "2626b198a7b66deeda195ef22b7c391791a98a35c438f95217f39a62a4b013f2"
+sha256 = "93eabb5d0ebdf23675fbdc7e77ec080c8110d567d63b3ee8c62ec51b91db1df6"
 
 [[inputs]]
 path = "Cargo.toml"
-sha256 = "89986112a7a40f6a035be5d36a09ff3fcbdaf4ed0dc48a10f7f8ba0261222aed"
+sha256 = "2787b4bff077e080e58c314e7b72539bd4f737829dbb34c8f3a1f68c300bab59"
 
 [[packages]]
 ecosystem = "cargo"
