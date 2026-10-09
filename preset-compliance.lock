@@ -6,7 +6,7 @@ version = 1
 [[inputs]]
 path = "Cargo.lock"
 ecosystem = "cargo"
-sha256 = "9c05afcec334022f567d875eb35143acb98ae4aba0679ce4c8a1f9a117654615"
+sha256 = "a4da4faf5010f4621740d3761f450ddd55bb17cf53a4d523a985042b291d4008"
 
 [[inputs]]
 path = "Cargo.toml"
@@ -639,7 +639,7 @@ scope = "shipped"
 [[packages]]
 ecosystem = "cargo"
 name = "spdx"
-version = "0.13.5"
+version = "0.13.6"
 source = "registry"
 declared = "Apache-2.0"
 scope = "shipped"
