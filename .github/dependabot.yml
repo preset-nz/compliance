@@ -24,6 +24,10 @@ updates:
       day: monday
     cooldown:
       default-days: 7
+    # The rust-toolchain@1.88 job tests the MSRV in Cargo.toml; it moves with
+    # rust-version, never on its own.
+    ignore:
+      - dependency-name: dtolnay/rust-toolchain
     commit-message:
       prefix: chore
       include: scope
