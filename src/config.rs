@@ -13,6 +13,19 @@ pub const FILE_NAME: &str = "preset-compliance.toml";
 #[serde(deny_unknown_fields)]
 pub struct Config {
     pub licences: Licences,
+    /// Optional: configs from before `notices` have no such section.
+    #[serde(default)]
+    pub notices: Notices,
+}
+
+/// What `preset-compliance notices` adds to the packages' own licence texts.
+#[derive(Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Notices {
+    /// Hand-written notice files (models, datasets, fonts), relative to the
+    /// repo root, included verbatim near the top of the output.
+    #[serde(default)]
+    pub extras: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -201,6 +214,17 @@ mod tests {
         let selector = &config.licences.exceptions[0].selector;
         assert!(selector.matches(&package("@img/sharp-libvips-darwin-arm64", "1.3.3")));
         assert!(!selector.matches(&package("@img/sharp-darwin-arm64", "0.35.4")));
+    }
+
+    #[test]
+    fn notices_section_is_optional() {
+        let bare = Config::parse("[licences]\nextends = \"permissive@1\"\n").unwrap();
+        assert!(bare.notices.extras.is_empty());
+        let text = "[licences]\nextends = \"permissive@1\"\n[notices]\nextras = [\"A.md\"]\n";
+        assert_eq!(Config::parse(text).unwrap().notices.extras, ["A.md"]);
+        assert!(
+            Config::parse("[licences]\nextends = \"permissive@1\"\n[notices]\nx = 1\n").is_err()
+        );
     }
 
     #[test]

@@ -8,6 +8,7 @@ mod detect;
 mod licence;
 mod lock;
 mod model;
+mod notices;
 mod onboard;
 mod preset;
 mod scan;
@@ -34,6 +35,16 @@ enum Command {
     Licences(Licences),
     /// Set a repo up: write preset-compliance.toml, scan, check.
     Init,
+    /// Write one plain-text file holding every shipped package's licence
+    /// text, found in the local installs. Reads the lock; no network.
+    Notices {
+        /// Where to write it. Default: THIRD-PARTY-NOTICES.txt in the root.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// The heading of the file.
+        #[arg(long, default_value = notices::DEFAULT_TITLE)]
+        title: String,
+    },
     /// Wire the check into the justfile and GitHub Actions.
     AddCi,
     /// Run the check at pre-commit through lefthook.
@@ -66,11 +77,16 @@ fn run(cli: Cli) -> Result<bool> {
         Command::Init => return init(&cli.root),
         Command::AddCi => return print_changes(onboard::add_ci(&cli.root)?),
         Command::AddHooks => return print_changes(onboard::add_hooks(&cli.root)?),
+        Command::Notices { out, title } => {
+            return notices_command(&cli.root, out.as_deref(), &title);
+        }
         Command::Licences(_) => {}
     }
     let config = config::Config::load(&cli.root)?;
     match cli.command {
-        Command::Init | Command::AddCi | Command::AddHooks => unreachable!("handled above"),
+        Command::Init | Command::AddCi | Command::AddHooks | Command::Notices { .. } => {
+            unreachable!("handled above")
+        }
         Command::Licences(Licences::Scan) => {
             let report = scan::scan(&cli.root, &config)?;
             for skipped in &report.lock.skipped {
@@ -105,6 +121,27 @@ fn run(cli: Cli) -> Result<bool> {
             Ok(report.passed())
         }
     }
+}
+
+fn notices_command(
+    root: &std::path::Path,
+    out: Option<&std::path::Path>,
+    title: &str,
+) -> Result<bool> {
+    let config = config::Config::load(root)?;
+    let lock = lock::Lock::load(root)?;
+    let path = out
+        .map(std::path::Path::to_path_buf)
+        .unwrap_or_else(|| root.join(notices::DEFAULT_OUT));
+    let summary = notices::write(root, &config, &lock, title, &path)?;
+    println!(
+        "notices: {} packages, {} with licence text, {} without, written {}",
+        summary.packages,
+        summary.with_text,
+        summary.without_text,
+        path.display()
+    );
+    Ok(true)
 }
 
 fn init(root: &std::path::Path) -> Result<bool> {

@@ -104,6 +104,21 @@ fn run_metadata(manifest: &Path) -> Result<Metadata> {
     )
 }
 
+/// Where each package's source sits on this machine, by (name, version), for
+/// `notices`. Reads the same metadata as a scan, so the registry cache must
+/// already hold the crates.
+pub(crate) fn package_dirs(manifest: &Path) -> Result<BTreeMap<(String, String), PathBuf>> {
+    let metadata = run_metadata(manifest)?;
+    Ok(metadata
+        .packages
+        .iter()
+        .filter_map(|p| {
+            let dir = p.manifest_path.parent()?.to_path_buf();
+            Some(((p.name.clone(), p.version.clone()), dir))
+        })
+        .collect())
+}
+
 pub fn from_metadata(metadata: &Metadata, root: &Path, lockfile: &Path) -> Result<Resolved> {
     let by_id: BTreeMap<&str, &MetaPackage> = metadata
         .packages

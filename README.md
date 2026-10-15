@@ -32,6 +32,11 @@ the lock.
 
 - **`init`** writes `preset-compliance.toml` extending `permissive@2`, runs the first scan and
   reports what fails.
+- **`notices`** writes `THIRD-PARTY-NOTICES.txt` (or `--out PATH`): the licence text of every
+  shipped package in the lock, read from the local installs (`cargo metadata`, `node_modules`, a
+  uv `.venv`), identical texts printed once, and a closing list of the packages that ship no
+  licence file. Offline. Files named in `[notices] extras` go in verbatim near the top. It reports
+  and exits 0 even when some text is missing.
 - **`add-ci`** adds a `licences` recipe to the justfile and calls it from `check`. Every workflow
   step that runs `just check` gets an install step before it. With no such step, it writes
   `.github/workflows/licences.yml` instead.
