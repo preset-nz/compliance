@@ -1,12 +1,12 @@
 # This repo judges its own dependencies with the policy it ships.
 [licences]
-extends = "permissive@1"
+extends = "permissive@2"
 exclude = ["tests/fixtures"]
 
 [licences.allow]
 # webpki-roots: Mozilla's root certificate list, which ureq uses to verify the
 # npm registry over TLS. CDLA-Permissive-2.0 is a permissive data licence: use
-# and redistribution allowed, the licence text kept. Not in permissive@1, and
+# and redistribution allowed, the licence text kept. Not in permissive@1 or @2, and
 # presets never change once released, so it is allowed here. Reviewed
 # 2026-09-27.
 shipped = ["CDLA-Permissive-2.0"]
