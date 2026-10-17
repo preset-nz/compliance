@@ -26,3 +26,4 @@ The Rust CLI that records every package a repo depends on, its licence and scope
 - **The cargo adapter hashes the workspace manifests as well as `Cargo.lock`**, so a version-only bump makes the lock stale. Rescan (`just scan`); knope's release does it for you.
 - **Time scans with `--release`.** Debug builds do slow TLS. The npm registry serves scoped per-version documents uncached and sometimes hangs before a 502, hence the worker count, timeout and retries in the pnpm adapter.
 - **Proc-macros and everything below them are build scope.**
+- **Tests find fixtures through `env!("CARGO_MANIFEST_DIR")`, fixed at compile time.** After moving the checkout, the uv tests fail with "No such file or directory" until `cargo clean -p preset-compliance` (seen 2026-10-17, after the move from `packages/` to `tools/`).
