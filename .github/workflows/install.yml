@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: preset-nz/compliance@v0.1.0
+      - uses: preset-nz/compliance@v0.1.2
         with:
           args: licences check --root tests/fixtures/colours
 
