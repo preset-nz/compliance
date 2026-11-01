@@ -6,7 +6,7 @@ version = 1
 [[inputs]]
 path = "Cargo.lock"
 ecosystem = "cargo"
-sha256 = "64dfdd972590707dd908b3abecdbd6bf90f60d8ec277dd91344afb901fa3bb48"
+sha256 = "87038b5257ebd49b1f7d61d9069fa4ab18f92dc0adcd28a15c22b2459ee1cd14"
 
 [[inputs]]
 path = "Cargo.toml"
@@ -519,7 +519,7 @@ scope = "shipped"
 [[packages]]
 ecosystem = "cargo"
 name = "rustls-webpki"
-version = "0.103.15"
+version = "0.103.16"
 source = "registry"
 declared = "ISC"
 scope = "shipped"
@@ -783,7 +783,7 @@ scope = "shipped"
 [[packages]]
 ecosystem = "cargo"
 name = "webpki-roots"
-version = "1.0.9"
+version = "1.0.11"
 source = "registry"
 declared = "CDLA-Permissive-2.0"
 scope = "shipped"
